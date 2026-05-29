@@ -126,6 +126,9 @@
     .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
     .btn.secondary { background: var(--blue); }
     .btn.neutral { background: var(--slate); }
+    .btn.notify-on { background: #7c3aed; }
+    .btn.notify-off { background: #94a3b8; }
+    .btn.notify-denied { background: #b45309; }
 
     .pill {
       display: inline-flex;
@@ -675,6 +678,10 @@
               <option value="1000">1000</option>
             </select>
           </label>
+
+          <button type="button" id="notifyBtn" class="btn notify-off" title="Browser &amp; desktop alerts for new Firebase logs">
+            Enable alerts
+          </button>
         </div>
       </div>
     </div>
@@ -787,6 +794,10 @@
       const pageSizeSel = document.getElementById("pageSize");
       const pagePill = document.getElementById("pagePill");
       const countPill = document.getElementById("countPill");
+      const notifyBtn = document.getElementById("notifyBtn");
+
+      const NOTIFY_STORAGE_KEY = "logViewerNotifications";
+      let notifyEnabled = localStorage.getItem(NOTIFY_STORAGE_KEY) === "1";
 
       const filters = {
         timestamp: document.getElementById("f-timestamp"),
@@ -866,6 +877,146 @@
         const parts = [locPart(country), locPart(region), locPart(city)].filter(Boolean);
         return parts.join(", ");
       }
+
+      function truncate(str, max) {
+        const s = String(str || "");
+        return s.length <= max ? s : s.slice(0, max - 1) + "…";
+      }
+
+      // ======= browser & desktop notifications (Firebase new_log via SSE) =======
+      async function registerServiceWorker() {
+        if (!("serviceWorker" in navigator)) return null;
+        try {
+          return await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        } catch (e) {
+          console.warn("Service worker registration failed:", e);
+          return null;
+        }
+      }
+
+      function updateNotifyButton() {
+        if (!("Notification" in window)) {
+          notifyBtn.disabled = true;
+          notifyBtn.textContent = "Alerts unavailable";
+          notifyBtn.className = "btn notify-denied";
+          return;
+        }
+        if (Notification.permission === "denied") {
+          notifyBtn.disabled = false;
+          notifyBtn.textContent = "Alerts blocked";
+          notifyBtn.className = "btn notify-denied";
+          notifyBtn.title = "Enable notifications in your browser site settings";
+          return;
+        }
+        if (notifyEnabled && Notification.permission === "granted") {
+          notifyBtn.textContent = "Alerts on";
+          notifyBtn.className = "btn notify-on";
+          notifyBtn.title = "Click to turn off browser & desktop notifications";
+        } else {
+          notifyBtn.textContent = "Enable alerts";
+          notifyBtn.className = "btn notify-off";
+          notifyBtn.title = "Enable browser & desktop notifications for new Firebase logs";
+        }
+      }
+
+      function buildNotificationContent(log) {
+        const loc = locationTitle(log.country, log.regionName, log.city);
+        const title = `New log · ${log.method || "REQUEST"}`;
+        const lines = [];
+        if (log.ip) lines.push(`IP: ${log.ip}`);
+        if (loc && loc !== "—") lines.push(loc);
+        if (log.source) lines.push(`Source: ${log.source}`);
+        if (log.url) lines.push(truncate(log.url, 100));
+        if (log.computername) lines.push(truncate(log.computername, 60));
+        const body = lines.length ? lines.join("\n") : "A new request was logged to Firebase.";
+        return { title, body };
+      }
+
+      async function showLogNotification(log) {
+        if (!notifyEnabled || !("Notification" in window) || Notification.permission !== "granted") {
+          return;
+        }
+        const { title, body } = buildNotificationContent(log);
+        const options = {
+          body,
+          tag: "firebase-new-log",
+          renotify: true,
+          requireInteraction: false,
+          silent: false,
+          data: { url: window.location.pathname || "/" },
+        };
+
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          if (reg?.showNotification) {
+            await reg.showNotification(title, options);
+            return;
+          }
+        } catch (e) {
+          console.warn("SW notification failed, falling back:", e);
+        }
+
+        const n = new Notification(title, options);
+        n.onclick = () => {
+          window.focus();
+          n.close();
+        };
+      }
+
+      async function enableNotifications() {
+        if (!("Notification" in window)) {
+          showError("This browser does not support notifications.");
+          return false;
+        }
+        await registerServiceWorker();
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") {
+          notifyEnabled = false;
+          localStorage.setItem(NOTIFY_STORAGE_KEY, "0");
+          updateNotifyButton();
+          if (perm === "denied") {
+            showError("Notifications blocked. Allow them in your browser settings for this site.");
+          }
+          return false;
+        }
+        notifyEnabled = true;
+        localStorage.setItem(NOTIFY_STORAGE_KEY, "1");
+        updateNotifyButton();
+        await showLogNotification({
+          method: "CONNECTED",
+          ip: "",
+          country: "",
+          regionName: "",
+          city: "",
+          url: "You will receive desktop alerts when new logs are saved to Firebase.",
+        });
+        return true;
+      }
+
+      function disableNotifications() {
+        notifyEnabled = false;
+        localStorage.setItem(NOTIFY_STORAGE_KEY, "0");
+        updateNotifyButton();
+      }
+
+      notifyBtn.addEventListener("click", async () => {
+        hideError();
+        if (notifyEnabled && Notification.permission === "granted") {
+          disableNotifications();
+          return;
+        }
+        await enableNotifications();
+      });
+
+      (async () => {
+        if (notifyEnabled && Notification.permission === "granted") {
+          await registerServiceWorker();
+        } else if (Notification.permission === "denied") {
+          notifyEnabled = false;
+          localStorage.setItem(NOTIFY_STORAGE_KEY, "0");
+        }
+        updateNotifyButton();
+      })();
 
       // ======= state =======
       let hideMineList = true;
@@ -1103,7 +1254,14 @@
       try {
         const es = new EventSource("/api/stream");
 
-        es.addEventListener("new_log", async () => {
+        es.addEventListener("new_log", async (ev) => {
+          let log = {};
+          try {
+            log = JSON.parse(ev.data || "{}");
+          } catch {}
+
+          showLogNotification(log);
+
           const onFirst = (pageNumber === 1 || pageNumber === "1");
           if (onFirst && filtersAreEmpty() && hideMineList === true) {
             await fetchPage("first", null, 1);
