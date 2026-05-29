@@ -42,13 +42,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+app.get("/sw.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  res.setHeader("Service-Worker-Allowed", "/");
+  res.setHeader("Cache-Control", "no-cache");
+  return res.sendFile(path.join(__dirname, "public", "sw.js"));
+});
+
 const generalLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 429, error: "Too many requests, try again later." },
-  skip: (req) => req.headers["x-secret-header"] === SECRET_HEADER_VALUE,
+  skip: (req) =>
+    req.headers["x-secret-header"] === SECRET_HEADER_VALUE ||
+    req.path === "/api/stream",
 });
 app.use(generalLimiter);
 
@@ -81,6 +90,7 @@ const sseClients = new Set();
 function sseSend(res, event, data) {
   res.write(`event: ${event}\n`);
   res.write(`data: ${JSON.stringify(data)}\n\n`);
+  if (typeof res.flush === "function") res.flush();
 }
 function broadcast(event, data) {
   for (const res of sseClients) {
@@ -90,8 +100,9 @@ function broadcast(event, data) {
 
 app.get("/api/stream", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders?.();
 
   sseSend(res, "hello", { ok: true, ts: Date.now() });

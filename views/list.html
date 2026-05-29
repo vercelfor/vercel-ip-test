@@ -198,6 +198,32 @@
       40% { box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.4); }
     }
 
+    .toast-notify {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      left: 20px;
+      max-width: 420px;
+      margin-left: auto;
+      z-index: 10000;
+      padding: 12px 16px;
+      background: #1e293b;
+      color: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      display: none;
+      animation: toastIn 0.25s ease;
+    }
+
+    .toast-notify.show { display: block; }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Filters (shared — desktop grid + mobile drawer) */
     .filter-panel {
       margin-bottom: 12px;
@@ -647,6 +673,8 @@
 </head>
 
 <body>
+  <div class="toast-notify" id="toastNotify" role="status" aria-live="polite"></div>
+
   <div class="loader-overlay" id="loader">
     <div class="loader-card">
       <div class="loader-label">Loading logs…</div>
@@ -805,10 +833,12 @@
       const pagePill = document.getElementById("pagePill");
       const countPill = document.getElementById("countPill");
       const notifyBtn = document.getElementById("notifyBtn");
+      const toastNotify = document.getElementById("toastNotify");
 
       const NOTIFY_STORAGE_KEY = "logViewerNotifications";
       let notifyEnabled = localStorage.getItem(NOTIFY_STORAGE_KEY) !== "0";
-      let notifyPrompted = false;
+      let swRegistration = null;
+      let toastTimer = null;
 
       const filters = {
         timestamp: document.getElementById("f-timestamp"),
@@ -895,14 +925,32 @@
       }
 
       // ======= browser & desktop notifications (Firebase new_log via SSE) =======
+      function showToast(message, ms = 4500) {
+        if (!toastNotify) return;
+        toastNotify.textContent = message;
+        toastNotify.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastNotify.classList.remove("show"), ms);
+      }
+
       async function registerServiceWorker() {
         if (!("serviceWorker" in navigator)) return null;
+        if (swRegistration) return swRegistration;
         try {
-          return await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+          swRegistration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+          return swRegistration;
         } catch (e) {
           console.warn("Service worker registration failed:", e);
           return null;
         }
+      }
+
+      function waitForSwReady(timeoutMs = 2500) {
+        if (!("serviceWorker" in navigator)) return Promise.resolve(null);
+        return Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+        ]).catch(() => null);
       }
 
       function updateNotifyButton() {
@@ -944,50 +992,71 @@
       }
 
       async function showLogNotification(log) {
-        if (!notifyEnabled || !("Notification" in window) || Notification.permission !== "granted") {
+        if (!("Notification" in window)) {
+          showToast("Notifications are not supported in this browser.");
           return false;
         }
+        if (Notification.permission !== "granted") {
+          return false;
+        }
+        if (!notifyEnabled) return false;
+
         const { title, body } = buildNotificationContent(log);
+        const tag = `firebase-log-${log.id || Date.now()}`;
         const options = {
           body,
-          tag: "firebase-new-log",
+          tag,
           renotify: true,
           requireInteraction: false,
           silent: false,
-          data: { url: window.location.pathname || "/" },
+          data: { url: window.location.href || "/mine/list" },
         };
 
+        // 1) Direct Notification API — most reliable when the tab is open
         try {
-          const reg = await navigator.serviceWorker.ready;
-          if (reg?.showNotification) {
-            await reg.showNotification(title, options);
+          const n = new Notification(title, options);
+          n.onclick = () => {
+            window.focus();
+            n.close();
+          };
+          return true;
+        } catch (e) {
+          console.warn("Direct notification failed:", e);
+        }
+
+        // 2) Service worker — better when tab is in background
+        try {
+          await registerServiceWorker();
+          const ready = await waitForSwReady();
+          if (ready?.showNotification) {
+            await ready.showNotification(title, options);
             return true;
           }
         } catch (e) {
-          console.warn("SW notification failed, falling back:", e);
+          console.warn("SW notification failed:", e);
         }
 
-        const n = new Notification(title, options);
-        n.onclick = () => {
-          window.focus();
-          n.close();
-        };
-        return true;
+        showToast(`${title} — ${body.split("\n")[0]}`);
+        return false;
       }
 
       async function applyNotificationsForLog(log) {
-        if (!("Notification" in window)) return;
-        await registerServiceWorker();
+        if (!("Notification" in window)) {
+          showToast("New log received (notifications not supported).");
+          return;
+        }
+
         if (Notification.permission === "granted") {
           notifyEnabled = true;
           updateNotifyButton();
           await showLogNotification(log);
           return;
         }
-        if (Notification.permission === "default" && notifyEnabled && !notifyPrompted) {
-          notifyPrompted = true;
-          const ok = await enableNotifications(true);
-          if (ok) await showLogNotification(log);
+
+        if (Notification.permission === "default" && notifyEnabled) {
+          showToast("Click “Enable alerts” to allow desktop notifications.");
+        } else if (Notification.permission === "denied") {
+          showToast("Notifications blocked — enable them in browser settings.");
         }
       }
 
@@ -1005,7 +1074,7 @@
       }
 
       async function handleFirebaseUpdate(log) {
-        applyNotificationsForLog(log);
+        await applyNotificationsForLog(log);
 
         if (isOnFirstPage()) {
           hideNewBanner();
@@ -1060,16 +1129,14 @@
         hideError();
         if (notifyEnabled && Notification.permission === "granted") {
           disableNotifications();
+          showToast("Desktop alerts turned off.");
           return;
         }
-        await enableNotifications();
+        const ok = await enableNotifications();
+        if (!ok && Notification.permission === "default") {
+          showToast("Allow notifications when the browser asks.");
+        }
       });
-
-      document.addEventListener("click", async () => {
-        if (Notification.permission !== "default" || !notifyEnabled) return;
-        notifyPrompted = true;
-        await enableNotifications();
-      }, { once: true });
 
       (async () => {
         await registerServiceWorker();
@@ -1079,6 +1146,8 @@
         } else if (Notification.permission === "denied") {
           notifyEnabled = false;
           localStorage.setItem(NOTIFY_STORAGE_KEY, "0");
+        } else if (notifyEnabled) {
+          showToast("Click “Enable alerts” for desktop notifications on new logs.");
         }
         updateNotifyButton();
       })();
