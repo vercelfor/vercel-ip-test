@@ -25,7 +25,15 @@
       --radius: 10px;
       --font: "Segoe UI", system-ui, -apple-system, sans-serif;
       --mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+      --fs-xs: 0.8125rem;
+      --fs-sm: 0.9375rem;
+      --fs-base: 1.0625rem;
+      --fs-md: 1.125rem;
+      --fs-lg: 1.375rem;
+      --fs-xl: 1.625rem;
     }
+
+    html { font-size: 18px; }
 
     * { box-sizing: border-box; }
 
@@ -60,13 +68,13 @@
 
     .header-title h1 {
       margin: 0;
-      font-size: 1.35rem;
+      font-size: var(--fs-xl);
       font-weight: 700;
       letter-spacing: -0.02em;
     }
 
     .version-badge {
-      font-size: 0.72rem;
+      font-size: var(--fs-xs);
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 999px;
@@ -76,7 +84,7 @@
     }
 
     .header-meta {
-      font-size: 0.82rem;
+      font-size: var(--fs-sm);
       color: var(--text-muted);
       font-weight: 600;
     }
@@ -101,14 +109,14 @@
     .btn-group { display: flex; gap: 4px; }
 
     .btn {
-      padding: 8px 14px;
+      padding: 10px 16px;
       border: 1px solid transparent;
       border-radius: 8px;
       cursor: pointer;
       color: white;
       background: var(--accent);
       font-weight: 600;
-      font-size: 0.84rem;
+      font-size: var(--fs-base);
       transition: background 0.15s, transform 0.08s, opacity 0.15s;
       user-select: none;
     }
@@ -127,7 +135,7 @@
       border-radius: 999px;
       background: var(--bg);
       border: 1px solid var(--border);
-      font-size: 0.8rem;
+      font-size: var(--fs-sm);
       font-weight: 600;
       color: var(--text);
     }
@@ -140,7 +148,7 @@
       border: 1px solid var(--border);
       background: var(--surface);
       font-weight: 600;
-      font-size: 0.82rem;
+      font-size: var(--fs-sm);
       color: var(--text);
     }
 
@@ -151,7 +159,7 @@
       margin: 0 0 12px;
       padding: 10px 14px;
       font-weight: 600;
-      font-size: 0.88rem;
+      font-size: var(--fs-base);
       background: var(--red-soft);
       border: 1px solid #fecaca;
       border-radius: var(--radius);
@@ -169,7 +177,7 @@
       background: linear-gradient(135deg, #1e293b, #334155);
       color: white;
       font-weight: 600;
-      font-size: 0.88rem;
+      font-size: var(--fs-base);
       cursor: pointer;
       box-shadow: var(--shadow);
       transition: transform 0.12s;
@@ -177,11 +185,72 @@
 
     #newBanner:hover { transform: translateY(-1px); }
 
-    /* Table */
+    /* Filters (shared — desktop grid + mobile drawer) */
+    .filter-panel {
+      margin-bottom: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .filter-toggle {
+      display: none;
+      width: 100%;
+      padding: 12px 14px;
+      border: none;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      font-size: var(--fs-base);
+      cursor: pointer;
+      text-align: left;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .filter-toggle-icon {
+      font-size: var(--fs-xs);
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .filter-panel.is-open .filter-toggle-icon { transform: rotate(180deg); }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px 12px 12px;
+    }
+
+    .filter-panel .filter-toggle + .filter-grid {
+      border-top: 1px solid var(--border);
+    }
+
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .filter-field label {
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    /* Table (desktop / tablet) */
     .table-container {
       overflow: auto;
-      height: calc(100vh - 180px);
-      min-height: 400px;
+      -webkit-overflow-scrolling: touch;
+      height: calc(100dvh - 260px);
+      min-height: 320px;
       width: 100%;
       background: var(--surface);
       border-radius: var(--radius);
@@ -189,49 +258,134 @@
       box-shadow: var(--shadow);
     }
 
+    .scroll-hint {
+      display: none;
+      font-size: var(--fs-xs);
+      color: var(--text-muted);
+      text-align: center;
+      margin: 0 0 8px;
+      font-weight: 500;
+    }
+
+    /* Card list (mobile) */
+    .card-list {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100dvh - 280px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+
+    .log-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .log-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-num {
+      font-weight: 700;
+      font-size: var(--fs-sm);
+      color: var(--text-muted);
+      min-width: 28px;
+    }
+
+    .log-ts {
+      font-family: var(--mono);
+      font-size: var(--fs-sm);
+      color: var(--slate);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .log-card-body {
+      margin: 0;
+      padding: 10px 12px 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 8px;
+      align-items: start;
+      font-size: var(--fs-sm);
+    }
+
+    .log-row dt {
+      margin: 0;
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      padding-top: 2px;
+    }
+
+    .log-row dd {
+      margin: 0;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .log-row dd.col-url { color: var(--blue); font-size: var(--fs-sm); }
+    .log-row dd.col-ip { font-family: var(--mono); font-weight: 600; color: #0f766e; font-size: var(--fs-sm); }
+
     td.col-location {
       white-space: normal;
       line-height: 1.35;
     }
 
     .loc-primary { font-weight: 600; display: block; }
-    .loc-detail { font-size: 0.76rem; color: var(--text-muted); display: block; }
+    .loc-detail { font-size: var(--fs-sm); color: var(--text-muted); display: block; }
 
     table {
       width: 100%;
       min-width: 1820px;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 0.84rem;
+      font-size: var(--fs-base);
     }
 
     th, td {
-      padding: 9px 12px;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: middle;
-      height: 44px;
+      height: 50px;
     }
 
     thead tr:first-child th {
       background: var(--accent);
       color: white;
       font-weight: 600;
-      font-size: 0.78rem;
+      font-size: var(--fs-sm);
       text-transform: uppercase;
       letter-spacing: 0.04em;
       position: sticky;
       top: 0;
       z-index: 3;
-    }
-
-    thead tr.filters th {
-      background: #f8fafc;
-      position: sticky;
-      top: 44px;
-      z-index: 2;
-      padding: 6px 8px;
-      height: auto;
     }
 
     tbody tr:nth-child(even) td { background: #fafbfc; }
@@ -252,19 +406,19 @@
 
     td.col-ts {
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: var(--fs-sm);
       color: var(--slate);
     }
 
     td.col-ip {
       font-family: var(--mono);
-      font-size: 0.8rem;
+      font-size: var(--fs-sm);
       font-weight: 600;
       color: #0f766e;
     }
 
     td.col-url {
-      font-size: 0.8rem;
+      font-size: var(--fs-sm);
       color: var(--blue);
     }
 
@@ -274,14 +428,14 @@
     }
 
     .user-pc { font-weight: 600; display: block; }
-    .user-name { font-size: 0.76rem; color: var(--text-muted); display: block; }
+    .user-name { font-size: var(--fs-sm); color: var(--text-muted); display: block; }
 
     .filter-input {
-      padding: 7px 10px;
+      padding: 9px 12px;
       border: 1px solid var(--border);
       border-radius: 6px;
       width: 100%;
-      font-size: 0.82rem;
+      font-size: var(--fs-sm);
       font-weight: 500;
       background: var(--surface);
       color: var(--text);
@@ -300,7 +454,7 @@
       display: inline-block;
       padding: 3px 8px;
       border-radius: 6px;
-      font-size: 0.72rem;
+      font-size: var(--fs-sm);
       font-weight: 700;
       letter-spacing: 0.02em;
       text-transform: uppercase;
@@ -319,7 +473,7 @@
       background: #f1f5f9;
       color: var(--slate);
       font-family: var(--mono);
-      font-size: 0.76rem;
+      font-size: var(--fs-sm);
       text-transform: none;
     }
 
@@ -328,9 +482,10 @@
       padding: 48px 20px;
       color: var(--text-muted);
       font-weight: 500;
+      font-size: var(--fs-base);
     }
 
-    .empty-state-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+    .empty-state-icon { font-size: 2.25rem; margin-bottom: 8px; opacity: 0.5; }
 
     /* Loader */
     .loader-overlay {
@@ -356,7 +511,7 @@
 
     .loader-label {
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: var(--fs-md);
       color: var(--text-muted);
       margin-bottom: 14px;
     }
@@ -381,10 +536,99 @@
       100% { transform: translateX(280%); }
     }
 
+    /* ── Tablet ── */
+    @media (max-width: 1200px) {
+      .filter-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .table-container {
+        height: calc(100dvh - 320px);
+      }
+
+      .scroll-hint { display: block; }
+    }
+
+    /* ── Mobile ── */
     @media (max-width: 768px) {
-      body { padding: 10px; }
-      .table-container { height: calc(100vh - 220px); }
-      table { min-width: 1500px; }
+      body {
+        padding: 10px 10px max(16px, env(safe-area-inset-bottom));
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+      }
+
+      .header-title h1 { font-size: var(--fs-lg); }
+      .header-meta { font-size: var(--fs-sm); }
+
+      .bar {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .left {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-group {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        width: 100%;
+      }
+
+      .btn {
+        padding: 10px 6px;
+        font-size: var(--fs-sm);
+      }
+
+      .bar-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .bar-stats .pill { flex: 1; justify-content: center; min-width: calc(50% - 3px); }
+
+      .filter-toggle { display: flex; }
+
+      .filter-grid {
+        display: none;
+        grid-template-columns: 1fr;
+        padding: 10px;
+      }
+
+      .filter-panel.is-open .filter-grid { display: grid; }
+
+      .table-container { display: none !important; }
+
+      .card-list {
+        display: flex;
+        max-height: calc(100dvh - 320px);
+      }
+
+      #newBanner {
+        font-size: var(--fs-sm);
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .btn-group { grid-template-columns: repeat(2, 1fr); }
+      .log-row { grid-template-columns: 72px 1fr; }
+
+      .filter-input,
+      select { font-size: var(--fs-base); }
     }
   </style>
 </head>
@@ -418,20 +662,65 @@
           <button id="lastBtn" class="btn neutral" type="button">Last</button>
         </div>
 
-        <span class="pill" id="pagePill">Page 1</span>
-        <span class="pill" id="countPill">0 rows</span>
+        <div class="bar-stats">
+          <span class="pill" id="pagePill">Page 1</span>
+          <span class="pill" id="countPill">0 rows</span>
 
-        <label class="pill">
-          <span class="pill-label">Page size</span>
-          <select id="pageSize">
-            <option value="100">100</option>
-            <option value="200" selected>200</option>
-            <option value="500">500</option>
-            <option value="1000">1000</option>
-          </select>
-        </label>
+          <label class="pill">
+            <span class="pill-label">Page size</span>
+            <select id="pageSize">
+              <option value="100">100</option>
+              <option value="200" selected>200</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+            </select>
+          </label>
+        </div>
       </div>
     </div>
+
+    <section class="filter-panel" id="filterPanel" aria-label="Column filters">
+      <button type="button" class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filterGrid">
+        <span>Filters</span>
+        <span class="filter-toggle-icon" aria-hidden="true">▼</span>
+      </button>
+      <div class="filter-grid" id="filterGrid">
+        <div class="filter-field">
+          <label for="f-timestamp">Timestamp</label>
+          <input class="filter-input" id="f-timestamp" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-location">Location</label>
+          <input class="filter-input" id="f-location" placeholder="Country, region, city…">
+        </div>
+        <div class="filter-field">
+          <label for="f-method">Method</label>
+          <input class="filter-input" id="f-method" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-source">Source</label>
+          <input class="filter-input" id="f-source" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-ip">IP</label>
+          <input class="filter-input" id="f-ip" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-url">URL</label>
+          <input class="filter-input" id="f-url" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-flag">Flag</label>
+          <input class="filter-input" id="f-flag" placeholder="Filter…">
+        </div>
+        <div class="filter-field">
+          <label for="f-computername">PC / User</label>
+          <input class="filter-input" id="f-computername" placeholder="Filter…">
+        </div>
+      </div>
+    </section>
+
+    <p class="scroll-hint">Swipe horizontally to see all columns</p>
 
     <div class="table-container" id="tableWrap" style="display:none;">
       <table>
@@ -447,23 +736,13 @@
             <th style="width:72px;">Flag</th>
             <th style="width:340px;">PC / Username</th>
           </tr>
-
-          <tr class="filters">
-            <th></th>
-            <th><input class="filter-input" id="f-timestamp" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-location" placeholder="Country, region, city…"></th>
-            <th><input class="filter-input" id="f-method" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-source" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-ip" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-url" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-flag" placeholder="Filter…"></th>
-            <th><input class="filter-input" id="f-computername" placeholder="Filter…"></th>
-          </tr>
         </thead>
 
         <tbody id="tbody"></tbody>
       </table>
     </div>
+
+    <div class="card-list" id="cardList" style="display:none;" aria-live="polite"></div>
   </div>
 
   <script>
@@ -472,7 +751,34 @@
       const errorDiv = document.getElementById("errorMessage");
       const tableWrap = document.getElementById("tableWrap");
       const tbody = document.getElementById("tbody");
+      const cardList = document.getElementById("cardList");
+      const filterPanel = document.getElementById("filterPanel");
+      const filterToggle = document.getElementById("filterToggle");
       const newBanner = document.getElementById("newBanner");
+
+      const mobileMq = window.matchMedia("(max-width: 768px)");
+
+      function isMobile() { return mobileMq.matches; }
+
+      function showResultsView() {
+        if (isMobile()) {
+          tableWrap.style.display = "none";
+          cardList.style.display = "flex";
+        } else {
+          tableWrap.style.display = "block";
+          cardList.style.display = "none";
+        }
+      }
+
+      filterToggle.addEventListener("click", () => {
+        const open = filterPanel.classList.toggle("is-open");
+        filterToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+
+      mobileMq.addEventListener("change", () => {
+        showResultsView();
+        renderTable();
+      });
 
       const firstBtn = document.getElementById("firstBtn");
       const prevBtn = document.getElementById("prevBtn");
@@ -603,15 +909,64 @@
         await fetchPage("first", null, 1);
       });
 
-      function renderTable() {
+      function renderCards() {
         if (pageItems.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="9" class="empty-state">
-                <div class="empty-state-icon">📭</div>
-                No logs match the current filters
-              </td>
-            </tr>`;
+          cardList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📭</div>
+              No logs match the current filters
+            </div>`;
+          return;
+        }
+
+        let html = "";
+        for (let i = 0; i < pageItems.length; i++) {
+          const r = pageItems[i];
+          const rowNum = pageItems.length - i;
+          html += `
+            <article class="log-card">
+              <header class="log-card-head">
+                <span class="log-num">#${rowNum}</span>
+                <time class="log-ts">${formatCell(r.timestamp)}</time>
+                <div class="log-badges">
+                  ${formatMethod(r.method)}
+                  ${formatSource(r.source)}
+                  ${formatFlag(r.flag)}
+                </div>
+              </header>
+              <dl class="log-card-body">
+                <div class="log-row">
+                  <dt>Location</dt>
+                  <dd>${formatLocation(r.country, r.regionName, r.city)}</dd>
+                </div>
+                <div class="log-row">
+                  <dt>IP</dt>
+                  <dd class="col-ip">${formatCell(r.ip)}</dd>
+                </div>
+                <div class="log-row">
+                  <dt>URL</dt>
+                  <dd class="col-url">${formatCell(r.url)}</dd>
+                </div>
+                <div class="log-row">
+                  <dt>PC / User</dt>
+                  <dd>${formatComputername(r.computername)}</dd>
+                </div>
+              </dl>
+            </article>`;
+        }
+        cardList.innerHTML = html;
+      }
+
+      function renderTable() {
+        const emptyHtml = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            No logs match the current filters
+          </div>`;
+
+        if (pageItems.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9">${emptyHtml}</td></tr>`;
+          cardList.innerHTML = emptyHtml;
         } else {
           let html = "";
           for (let i = 0; i < pageItems.length; i++) {
@@ -631,6 +986,7 @@
               </tr>`;
           }
           tbody.innerHTML = html;
+          renderCards();
         }
 
         pagePill.textContent = `Page ${pageNumber}`;
@@ -682,7 +1038,7 @@
 
           if (pageOverride !== null) pageNumber = pageOverride;
 
-          tableWrap.style.display = "block";
+          showResultsView();
           renderTable();
 
           lastGood = { items: pageItems, prevCursor, nextCursor, pageNumber };
