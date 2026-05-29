@@ -286,9 +286,18 @@ function matchesAllFilters(data, f, hideMineList) {
   const computername = lower(data.computername);
 
   if (f.timestamp && !ts.includes(f.timestamp)) return false;
-  if (f.country && !country.includes(f.country)) return false;
-  if (f.regionName && !regionName.includes(f.regionName)) return false;
-  if (f.city && !city.includes(f.city)) return false;
+  if (f.location) {
+    const loc = f.location;
+    const hit =
+      country.includes(loc) ||
+      regionName.includes(loc) ||
+      city.includes(loc);
+    if (!hit) return false;
+  } else {
+    if (f.country && !country.includes(f.country)) return false;
+    if (f.regionName && !regionName.includes(f.regionName)) return false;
+    if (f.city && !city.includes(f.city)) return false;
+  }
   if (f.method && !method.includes(f.method)) return false;
   if (f.source && !source.includes(f.source)) return false;
   if (f.ip && !ip.includes(f.ip)) return false;
@@ -319,6 +328,7 @@ app.get("/api/requests", async (req, res) => {
 
     const f = {
       timestamp: lower(req.query.timestamp),
+      location: lower(req.query.location),
       country: lower(req.query.country),
       regionName: lower(req.query.regionName),
       city: lower(req.query.city),
