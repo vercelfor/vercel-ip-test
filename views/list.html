@@ -40,13 +40,34 @@
     body {
       font-family: var(--font);
       margin: 0;
-      padding: 16px 20px 24px;
+      padding: 6px 8px 8px;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.45;
+      line-height: 1.35;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    .container { max-width: 100%; margin: 0 auto; }
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .chrome { flex-shrink: 0; }
+
+    .main-view {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
 
     /* Header */
     .header {
@@ -54,9 +75,9 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-      padding-bottom: 14px;
+      gap: 6px;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -68,15 +89,17 @@
 
     .header-title h1 {
       margin: 0;
-      font-size: var(--fs-xl);
+      font-size: var(--fs-md);
       font-weight: 700;
       letter-spacing: -0.02em;
     }
 
+    .header-meta { display: none; }
+
     .version-badge {
-      font-size: var(--fs-xs);
+      font-size: 0.7rem;
       font-weight: 700;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 999px;
       background: var(--accent-soft);
       color: var(--accent-dark);
@@ -92,50 +115,160 @@
     /* Toolbar */
     .bar {
       display: flex;
-      gap: 12px;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      margin-bottom: 12px;
-      padding: 12px 14px;
+      gap: 6px;
+      margin-bottom: 6px;
+      padding: 6px 8px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 8px;
       box-shadow: var(--shadow);
     }
 
-    .left, .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-    .btn-group { display: flex; gap: 4px; }
-
-    .btn {
-      padding: 10px 16px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      background: var(--accent);
-      font-weight: 600;
-      font-size: var(--fs-base);
-      transition: background 0.15s, transform 0.08s, opacity 0.15s;
-      user-select: none;
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    .btn:hover:not([disabled]) { filter: brightness(1.05); }
-    .btn:active:not([disabled]) { transform: scale(0.98); }
-    .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
-    .btn.secondary { background: var(--blue); }
-    .btn.neutral { background: var(--slate); }
-    .btn.notify-on { background: #7c3aed; }
-    .btn.notify-off { background: #94a3b8; }
-    .btn.notify-denied { background: #b45309; }
+    .toolbar-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-    .pill {
+    .toolbar-label { display: none; }
+
+    /* Buttons */
+    .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 999px;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      line-height: 1.2;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.08s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not([disabled]) {
+      background: var(--bg);
+      border-color: #cbd5e1;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    .btn:active:not([disabled]) { transform: scale(0.97); }
+
+    .btn[disabled] {
+      opacity: 0.38;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn .btn-icon {
+      font-size: 1em;
+      line-height: 1;
+      opacity: 0.85;
+    }
+
+    .btn-group {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      background: var(--bg);
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .btn-group .btn {
+      border: none;
+      border-radius: 0;
+      border-right: 1px solid var(--border);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .btn-group .btn:last-child { border-right: none; }
+
+    .btn-group .btn:hover:not([disabled]) {
+      background: var(--surface);
+    }
+
+    .btn-group .btn.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .btn-group .btn.primary:hover:not([disabled]) {
+      background: var(--accent-dark);
+      filter: none;
+    }
+
+    .btn-group .btn.primary[disabled] {
+      background: #94a3b8;
+      color: #fff;
+    }
+
+    .btn.solid-accent {
+      background: var(--accent);
+      border-color: var(--accent-dark);
+      color: #fff;
+    }
+
+    .btn.solid-accent:hover:not([disabled]) {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+    }
+
+    .btn.notify-on {
+      background: #7c3aed;
+      border-color: #6d28d9;
+      color: #fff;
+    }
+
+    .btn.notify-on:hover:not([disabled]) {
+      background: #6d28d9;
+      border-color: #5b21b6;
+    }
+
+    .btn.notify-off {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn.notify-denied {
+      background: #fff7ed;
+      border-color: #fdba74;
+      color: #c2410c;
+    }
+
+    .bar-stats {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .stat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
       background: var(--bg);
       border: 1px solid var(--border);
       font-size: var(--fs-sm);
@@ -143,24 +276,30 @@
       color: var(--text);
     }
 
-    .pill-label { color: var(--text-muted); font-weight: 500; }
+    .stat-chip strong {
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
 
-    select {
-      padding: 6px 10px;
+    .stat-chip select {
+      padding: 4px 8px;
       border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--surface);
       font-weight: 600;
       font-size: var(--fs-sm);
       color: var(--text);
+      cursor: pointer;
     }
+
+    .stat-chip-label { display: none; }
 
     .error-message {
       display: none;
       color: var(--red);
       text-align: center;
-      margin: 0 0 12px;
-      padding: 10px 14px;
+      margin: 0 0 4px;
+      padding: 6px 10px;
       font-weight: 600;
       font-size: var(--fs-base);
       background: var(--red-soft);
@@ -174,19 +313,26 @@
       position: sticky;
       top: 0;
       z-index: 999;
-      margin: 0 0 12px;
-      padding: 11px 16px;
-      border-radius: var(--radius);
-      background: linear-gradient(135deg, #1e293b, #334155);
-      color: white;
-      font-weight: 600;
-      font-size: var(--fs-base);
+      margin: 0 0 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #a7f3d0;
+      background: linear-gradient(135deg, var(--accent-soft), #d1fae5);
+      color: var(--accent-dark);
+      font-weight: 700;
+      font-size: var(--fs-sm);
       cursor: pointer;
       box-shadow: var(--shadow);
-      transition: transform 0.12s;
+      transition: transform 0.12s, box-shadow 0.15s;
+      text-align: center;
     }
 
-    #newBanner:hover { transform: translateY(-1px); }
+    #newBanner::before { content: "↻ "; }
+
+    #newBanner:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    }
 
     .table-container.is-updated,
     .card-list.is-updated {
@@ -226,28 +372,37 @@
 
     /* Filters (shared — desktop grid + mobile drawer) */
     .filter-panel {
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 8px;
       box-shadow: var(--shadow);
       overflow: hidden;
     }
 
     .filter-toggle {
-      display: none;
+      display: flex;
       width: 100%;
-      padding: 12px 14px;
+      padding: 5px 10px;
       border: none;
-      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
       color: var(--text);
       font-weight: 600;
-      font-size: var(--fs-base);
+      font-size: var(--fs-sm);
       cursor: pointer;
       text-align: left;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      transition: background 0.15s;
+    }
+
+    .filter-toggle:hover { background: #eef2f7; }
+
+    .filter-panel.is-open .filter-toggle {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
     }
 
     .filter-toggle-icon {
@@ -259,11 +414,13 @@
     .filter-panel.is-open .filter-toggle-icon { transform: rotate(180deg); }
 
     .filter-grid {
-      display: grid;
+      display: none;
       grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 8px;
-      padding: 10px 12px 12px;
+      gap: 6px;
+      padding: 6px 8px 8px;
     }
+
+    .filter-panel.is-open .filter-grid { display: grid; }
 
     .filter-panel .filter-toggle + .filter-grid {
       border-top: 1px solid var(--border);
@@ -272,15 +429,15 @@
     .filter-field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       min-width: 0;
     }
 
     .filter-field label {
-      font-size: var(--fs-xs);
+      font-size: 0.65rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
       color: var(--text-muted);
     }
 
@@ -288,30 +445,26 @@
     .table-container {
       overflow: auto;
       -webkit-overflow-scrolling: touch;
-      height: calc(100dvh - 260px);
-      min-height: 320px;
+      flex: 1;
+      min-height: 0;
+      height: auto;
       width: 100%;
       background: var(--surface);
-      border-radius: var(--radius);
+      border-radius: 8px;
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
     }
 
-    .scroll-hint {
-      display: none;
-      font-size: var(--fs-xs);
-      color: var(--text-muted);
-      text-align: center;
-      margin: 0 0 8px;
-      font-weight: 500;
-    }
+    .scroll-hint { display: none !important; }
 
     /* Card list (mobile) */
     .card-list {
       display: none;
       flex-direction: column;
-      gap: 10px;
-      max-height: calc(100dvh - 280px);
+      gap: 8px;
+      flex: 1;
+      min-height: 0;
+      max-height: none;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 8px;
@@ -408,11 +561,11 @@
     }
 
     th, td {
-      padding: 11px 14px;
+      padding: 7px 10px;
       border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: middle;
-      height: 50px;
+      height: 38px;
     }
 
     thead tr:first-child th {
@@ -470,9 +623,9 @@
     .user-name { font-size: var(--fs-sm); color: var(--text-muted); display: block; }
 
     .filter-input {
-      padding: 9px 12px;
+      padding: 5px 8px;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
       width: 100%;
       font-size: var(--fs-sm);
       font-weight: 500;
@@ -577,15 +730,9 @@
 
     /* ── Tablet ── */
     @media (max-width: 1200px) {
-      .filter-grid {
+      .filter-panel.is-open .filter-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
-
-      .table-container {
-        height: calc(100dvh - 320px);
-      }
-
-      .scroll-hint { display: block; }
     }
 
     /* ── Mobile ── */
@@ -608,36 +755,52 @@
       .header-meta { font-size: var(--fs-sm); }
 
       .bar {
-        padding: 10px;
-        gap: 10px;
-      }
-
-      .left {
-        width: 100%;
         flex-direction: column;
         align-items: stretch;
+        padding: 6px;
+        gap: 6px;
       }
+
+      .toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .toolbar-section { width: 100%; }
+
+      .toolbar-label { min-width: 0; }
 
       .btn-group {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 6px;
         width: 100%;
+        border: none;
+        box-shadow: none;
+        background: transparent;
       }
 
-      .btn {
-        padding: 10px 6px;
-        font-size: var(--fs-sm);
+      .btn-group .btn {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 11px 8px;
       }
 
       .bar-stats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
         width: 100%;
       }
 
-      .bar-stats .pill { flex: 1; justify-content: center; min-width: calc(50% - 3px); }
+      .bar-stats .stat-chip,
+      .bar-stats #notifyBtn {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .bar-stats #notifyBtn { grid-column: 1 / -1; }
 
       .filter-toggle { display: flex; }
 
@@ -651,10 +814,7 @@
 
       .table-container { display: none !important; }
 
-      .card-list {
-        display: flex;
-        max-height: calc(100dvh - 320px);
-      }
+      .card-list { display: flex; }
 
       #newBanner {
         font-size: var(--fs-sm);
@@ -683,52 +843,46 @@
   </div>
 
   <div class="container">
-    <header class="header">
-      <div class="header-title">
-        <h1>Logs Viewer</h1>
-        <span class="version-badge">v1.4.5</span>
-      </div>
-      <div class="header-meta">Real-time request monitor</div>
-    </header>
-
-    <div id="errorMessage" class="error-message"></div>
-    <div id="newBanner" title="Click to refresh results"></div>
-
-    <div class="bar">
-      <div class="left">
-        <div class="btn-group">
-          <button id="firstBtn" class="btn neutral" type="button">First</button>
-          <button id="prevBtn" class="btn secondary" type="button" disabled>Prev</button>
-          <button id="nextBtn" class="btn secondary" type="button" disabled>Next</button>
-          <button id="lastBtn" class="btn neutral" type="button">Last</button>
+    <div class="chrome">
+      <header class="header">
+        <div class="header-title">
+          <h1>Logs</h1>
+          <span class="version-badge">v1.4.5</span>
         </div>
+      </header>
 
-        <div class="bar-stats">
-          <span class="pill" id="pagePill">Page 1</span>
-          <span class="pill" id="countPill">0 rows</span>
+      <div id="errorMessage" class="error-message"></div>
+      <div id="newBanner" title="Click to refresh results"></div>
 
-          <label class="pill">
-            <span class="pill-label">Page size</span>
-            <select id="pageSize">
+      <div class="bar">
+        <div class="toolbar-row">
+          <div class="btn-group" role="group" aria-label="Pagination">
+            <button id="firstBtn" class="btn" type="button" title="First page">⏮</button>
+            <button id="prevBtn" class="btn primary" type="button" disabled title="Previous page">◀</button>
+            <button id="nextBtn" class="btn primary" type="button" disabled title="Next page">▶</button>
+            <button id="lastBtn" class="btn" type="button" title="Last page">⏭</button>
+          </div>
+        </div>
+        <div class="toolbar-row bar-stats">
+          <span class="stat-chip" id="pagePill" title="Current page"><strong>1</strong></span>
+          <span class="stat-chip" id="countPill" title="Rows on page"><strong>0</strong></span>
+          <label class="stat-chip" title="Page size">
+            <select id="pageSize" aria-label="Page size">
               <option value="100">100</option>
               <option value="200" selected>200</option>
               <option value="500">500</option>
               <option value="1000">1000</option>
             </select>
           </label>
-
-          <button type="button" id="notifyBtn" class="btn notify-off" title="Browser &amp; desktop alerts for new Firebase logs">
-            Enable alerts
-          </button>
+          <button type="button" id="notifyBtn" class="btn notify-off" title="Desktop alerts for new logs">🔔</button>
         </div>
       </div>
-    </div>
 
-    <section class="filter-panel" id="filterPanel" aria-label="Column filters">
-      <button type="button" class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filterGrid">
-        <span>Filters</span>
-        <span class="filter-toggle-icon" aria-hidden="true">▼</span>
-      </button>
+      <section class="filter-panel" id="filterPanel" aria-label="Column filters">
+        <button type="button" class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filterGrid">
+          <span>Filters</span>
+          <span class="filter-toggle-icon" aria-hidden="true">▼</span>
+        </button>
       <div class="filter-grid" id="filterGrid">
         <div class="filter-field">
           <label for="f-timestamp">Timestamp</label>
@@ -763,10 +917,10 @@
           <input class="filter-input" id="f-computername" placeholder="Filter…">
         </div>
       </div>
-    </section>
+      </section>
+    </div>
 
-    <p class="scroll-hint">Swipe horizontally to see all columns</p>
-
+    <div class="main-view">
     <div class="table-container" id="tableWrap" style="display:none;">
       <table>
         <thead>
@@ -788,6 +942,7 @@
     </div>
 
     <div class="card-list" id="cardList" style="display:none;" aria-live="polite"></div>
+    </div>
   </div>
 
   <script>
@@ -956,26 +1111,31 @@
       function updateNotifyButton() {
         if (!("Notification" in window)) {
           notifyBtn.disabled = true;
-          notifyBtn.textContent = "Alerts unavailable";
+          notifyBtn.textContent = "🔕";
           notifyBtn.className = "btn notify-denied";
           return;
         }
         if (Notification.permission === "denied") {
           notifyBtn.disabled = false;
-          notifyBtn.textContent = "Alerts blocked";
+          notifyBtn.textContent = "🔕";
           notifyBtn.className = "btn notify-denied";
           notifyBtn.title = "Enable notifications in your browser site settings";
           return;
         }
         if (notifyEnabled && Notification.permission === "granted") {
-          notifyBtn.textContent = "Alerts on";
+          notifyBtn.textContent = "🔔";
           notifyBtn.className = "btn notify-on";
-          notifyBtn.title = "Click to turn off browser & desktop notifications";
+          notifyBtn.title = "Alerts on — click to turn off";
         } else {
-          notifyBtn.textContent = "Enable alerts";
+          notifyBtn.textContent = "🔔";
           notifyBtn.className = "btn notify-off";
-          notifyBtn.title = "Enable browser & desktop notifications for new Firebase logs";
+          notifyBtn.title = "Enable desktop notifications";
         }
+      }
+
+      function setStatValue(chipEl, value) {
+        const strong = chipEl.querySelector("strong");
+        if (strong) strong.textContent = value;
       }
 
       function buildNotificationContent(log) {
@@ -1054,7 +1214,7 @@
         }
 
         if (Notification.permission === "default" && notifyEnabled) {
-          showToast("Click “Enable alerts” to allow desktop notifications.");
+          showToast("Click the 🔔 button to allow desktop notifications.");
         } else if (Notification.permission === "denied") {
           showToast("Notifications blocked — enable them in browser settings.");
         }
@@ -1147,7 +1307,7 @@
           notifyEnabled = false;
           localStorage.setItem(NOTIFY_STORAGE_KEY, "0");
         } else if (notifyEnabled) {
-          showToast("Click “Enable alerts” for desktop notifications on new logs.");
+          showToast("Click 🔔 to enable desktop notifications on new logs.");
         }
         updateNotifyButton();
       })();
@@ -1274,8 +1434,8 @@
           renderCards();
         }
 
-        pagePill.textContent = `Page ${pageNumber}`;
-        countPill.textContent = `${pageItems.length} row${pageItems.length === 1 ? "" : "s"}`;
+        setStatValue(pagePill, pageNumber);
+        setStatValue(countPill, `${pageItems.length} row${pageItems.length === 1 ? "" : "s"}`);
 
         prevBtn.disabled = !prevCursor;
         nextBtn.disabled = !nextCursor;
