@@ -4,133 +4,379 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Logs Viewer Application"/>
-  <title>Logs Viewer_v1.4.5</title>
+  <title>Logs Viewer v1.4.5</title>
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f4f9; color:#222; }
-    .container { max-width: 100%; margin: 0 auto; }
-    h2 { text-align: center; margin: 8px 0 10px; }
+    :root {
+      --bg: #f0f2f8;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #059669;
+      --accent-dark: #047857;
+      --accent-soft: #ecfdf5;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --red: #dc2626;
+      --red-soft: #fef2f2;
+      --slate: #334155;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 10px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    }
 
-    .bar { display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom: 8px; }
-    .left, .right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      margin: 0;
+      padding: 16px 20px 24px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .container { max-width: 100%; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .version-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border: 1px solid #a7f3d0;
+    }
+
+    .header-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Toolbar */
+    .bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .left, .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .btn-group { display: flex; gap: 4px; }
 
     .btn {
-      padding: 10px 14px; border: none; border-radius: 10px; cursor: pointer;
-      color: white; background: #4caf50; font-weight: 800;
-      transition: transform .08s ease, opacity .2s ease;
+      padding: 8px 14px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+      font-weight: 600;
+      font-size: 0.84rem;
+      transition: background 0.15s, transform 0.08s, opacity 0.15s;
       user-select: none;
     }
-    .btn:active { transform: scale(0.98); }
-    .btn[disabled] { opacity: .45; cursor: not-allowed; }
-    .btn.danger { background:#f44336; }
-    .btn.secondary { background:#3b82f6; }
-    .btn.neutral { background:#111827; }
 
-    .pill { padding: 6px 10px; border-radius: 999px; background:#fff; border:1px solid #ddd; font-size:13px; font-weight:800; }
-    select { padding: 8px 10px; border-radius: 10px; border: 1px solid #ddd; background:#fff; font-weight:800; }
+    .btn:hover:not([disabled]) { filter: brightness(1.05); }
+    .btn:active:not([disabled]) { transform: scale(0.98); }
+    .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+    .btn.secondary { background: var(--blue); }
+    .btn.neutral { background: var(--slate); }
 
-    .error-message { display:none; color:#b00020; text-align:center; margin:10px 0; font-weight:900; }
-
-    /* Bigger viewport */
-    .table-container {
-      overflow:auto;
-      height: 90vh;
-      width: 100%;
-      background:#fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
     }
 
-    table { width:100%; min-width: 2100px; border-collapse: collapse; table-layout: fixed; }
-    th, td {
-      padding: 10px 12px; border:1px solid #e0e0e0; text-align:left;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      height: 42px; box-sizing:border-box;
-    }
-    th { background:#4caf50; color:white; position: sticky; top:0; z-index:2; }
-    thead tr.filters th { background:#3f9f45; top:42px; z-index:1; }
-    tr:nth-child(even) td { background:#fafafe; }
-    tr:hover td { background:#eef2ff; }
+    .pill-label { color: var(--text-muted); font-weight: 500; }
 
-    .filter-input {
-      padding: 8px; border: 1px solid #ddd; border-radius: 10px;
-      width: 120px; font-size:14px; font-weight:700;
+    select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    .error-message {
+      display: none;
+      color: var(--red);
+      text-align: center;
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      background: var(--red-soft);
+      border: 1px solid #fecaca;
+      border-radius: var(--radius);
     }
 
     /* New logs banner */
     #newBanner {
-      display:none;
+      display: none;
       position: sticky;
       top: 0;
       z-index: 999;
-      margin: 6px 0 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #111827;
+      margin: 0 0 12px;
+      padding: 11px 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #1e293b, #334155);
       color: white;
-      font-weight: 900;
+      font-weight: 600;
+      font-size: 0.88rem;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow);
+      transition: transform 0.12s;
     }
 
-    /* Funny loader (NO avatar) */
-    .loader-overlay {
-      position: fixed; inset: 0;
-      background: rgba(244,244,249,0.92);
-      display:none; align-items:center; justify-content:center;
-      z-index:9999; backdrop-filter: blur(2px);
+    #newBanner:hover { transform: translateY(-1px); }
+
+    /* Table */
+    .table-container {
+      overflow: auto;
+      height: calc(100vh - 180px);
+      min-height: 400px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
     }
+
+    table {
+      width: 100%;
+      min-width: 2100px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 0.84rem;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      height: 44px;
+    }
+
+    thead tr:first-child th {
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+
+    thead tr.filters th {
+      background: #f8fafc;
+      position: sticky;
+      top: 44px;
+      z-index: 2;
+      padding: 6px 8px;
+      height: auto;
+    }
+
+    tbody tr:nth-child(even) td { background: #fafbfc; }
+    tbody tr:hover td { background: var(--blue-soft); }
+
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    td.col-num {
+      text-align: center;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    td.col-ts {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--slate);
+    }
+
+    td.col-ip {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0f766e;
+    }
+
+    td.col-url {
+      font-size: 0.8rem;
+      color: var(--blue);
+    }
+
+    td.col-user {
+      white-space: normal;
+      line-height: 1.35;
+    }
+
+    .user-pc { font-weight: 600; display: block; }
+    .user-name { font-size: 0.76rem; color: var(--text-muted); display: block; }
+
+    .filter-input {
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100%;
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+    }
+
+    .filter-input::placeholder { color: #94a3b8; font-weight: 400; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge-get { background: #dbeafe; color: #1d4ed8; }
+    .badge-post { background: #fef3c7; color: #b45309; }
+    .badge-secret { background: #fce7f3; color: #be185d; }
+    .badge-other { background: #f1f5f9; color: #475569; }
+
+    .badge-web { background: var(--accent-soft); color: var(--accent-dark); }
+    .badge-postman { background: #fff7ed; color: #c2410c; }
+
+    .badge-flag {
+      background: #f1f5f9;
+      color: var(--slate);
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      text-transform: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .empty-state-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+
+    /* Loader */
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(240, 242, 248, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(3px);
+    }
+
     .loader-card {
-      width: min(460px, 92vw);
-      background: white;
-      border-radius: 18px;
-      box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-      padding: 18px 18px 14px;
-      border: 1px solid #e9e9f4;
-      position: relative;
+      width: min(380px, 90vw);
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .loader-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .progress {
+      height: 6px;
+      border-radius: 999px;
+      background: #e2e8f0;
       overflow: hidden;
     }
-    .sparkles {
-      position:absolute; inset:-40px;
-      background:
-        radial-gradient(circle at 10% 20%, rgba(76,175,80,.22), transparent 45%),
-        radial-gradient(circle at 80% 30%, rgba(59,130,246,.18), transparent 50%),
-        radial-gradient(circle at 30% 90%, rgba(244,67,54,.18), transparent 50%);
-      animation: floaty 3.2s ease-in-out infinite;
-      pointer-events:none;
-    }
-    @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
-    .loader-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; position:relative; z-index:1; }
-    .loader-title strong { font-size:16px; }
-    .loader-title .tiny { font-size:12px; opacity:.75; font-weight:800; }
-    .wheel-wrap { display:grid; place-items:center; margin:12px 0 10px; position:relative; z-index:1; }
-    .wheel {
-      width:120px; height:120px; border-radius:50%;
-      border:10px dashed #4caf50;
-      animation: spin 0.65s linear infinite;
-      box-shadow: inset 0 0 0 8px rgba(76,175,80,0.08);
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .progress { height:10px; border-radius:999px; background:#eef2ff; overflow:hidden; border:1px solid #e0e7ff; position:relative; z-index:1; }
-    .progress > div {
-      height:100%; width:40%;
-      background: linear-gradient(90deg, #4caf50, #3b82f6, #f44336, #4caf50);
-      background-size:200% 100%;
-      animation: slide 0.9s ease-in-out infinite;
-      border-radius:999px;
-    }
-    @keyframes slide {
-      0% { transform: translateX(-70%); background-position: 0% 0%; }
-      100% { transform: translateX(180%); background-position: 100% 0%; }
-    }
-    .loader-quip { margin-top:10px; font-size:13px; opacity:.88; position:relative; z-index:1; line-height:1.45; font-weight:800; }
-    .quip-emoji { display:inline-block; animation:bop 0.6s ease-in-out infinite alternate; margin-right:6px; }
-    @keyframes bop { from{transform:translateY(0)} to{transform:translateY(-3px)} }
 
-    @media (max-width: 600px) {
-      .table-container { height: 86vh; }
+    .progress > div {
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      animation: slide 0.9s ease-in-out infinite;
+      border-radius: 999px;
+    }
+
+    @keyframes slide {
+      0% { transform: translateX(-70%); }
+      100% { transform: translateX(280%); }
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .table-container { height: calc(100vh - 220px); }
       table { min-width: 1750px; }
-      .filter-input { width: 95px; }
     }
   </style>
 </head>
@@ -138,29 +384,37 @@
 <body>
   <div class="loader-overlay" id="loader">
     <div class="loader-card">
-      <div class="sparkles"></div>
+      <div class="loader-label">Loading logs…</div>
       <div class="progress"><div></div></div>
     </div>
   </div>
 
   <div class="container">
-    <h2>Logs Viewer_v1.4.5</h2>
-    <div id="errorMessage" class="error-message"></div>
+    <header class="header">
+      <div class="header-title">
+        <h1>Logs Viewer</h1>
+        <span class="version-badge">v1.4.5</span>
+      </div>
+      <div class="header-meta">Real-time request monitor</div>
+    </header>
 
+    <div id="errorMessage" class="error-message"></div>
     <div id="newBanner" title="Click to refresh results"></div>
 
     <div class="bar">
       <div class="left">
-        <button id="firstBtn" class="btn neutral" type="button">⏮ First</button>
-        <button id="prevBtn" class="btn secondary" type="button" disabled>⬅ Prev</button>
-        <button id="nextBtn" class="btn secondary" type="button" disabled>Next ➡</button>
-        <button id="lastBtn" class="btn neutral" type="button">Last ⏭</button>
+        <div class="btn-group">
+          <button id="firstBtn" class="btn neutral" type="button">First</button>
+          <button id="prevBtn" class="btn secondary" type="button" disabled>Prev</button>
+          <button id="nextBtn" class="btn secondary" type="button" disabled>Next</button>
+          <button id="lastBtn" class="btn neutral" type="button">Last</button>
+        </div>
 
         <span class="pill" id="pagePill">Page 1</span>
-        <span class="pill" id="countPill">Rows: 0</span>
+        <span class="pill" id="countPill">0 rows</span>
 
         <label class="pill">
-          Page size:
+          <span class="pill-label">Page size</span>
           <select id="pageSize">
             <option value="100">100</option>
             <option value="200" selected>200</option>
@@ -175,31 +429,31 @@
       <table>
         <thead>
           <tr>
-            <th style="width:60px;">#</th>
-            <th style="width:190px;">Timestamp</th>
-            <th style="width:140px;">Country</th>
-            <th style="width:160px;">Region</th>
-            <th style="width:150px;">City</th>
-            <th style="width:140px;">Method</th>
-            <th style="width:120px;">Source</th>
-            <th style="width:150px;">IP</th>
+            <th style="width:52px;">#</th>
+            <th style="width:175px;">Timestamp</th>
+            <th style="width:120px;">Country</th>
+            <th style="width:140px;">Region</th>
+            <th style="width:130px;">City</th>
+            <th style="width:130px;">Method</th>
+            <th style="width:100px;">Source</th>
+            <th style="width:140px;">IP Address</th>
             <th style="width:360px;">Request URL</th>
-            <th style="width:80px;">Flag</th>
-            <th style="width:360px;">PC name / Username</th>
+            <th style="width:72px;">Flag</th>
+            <th style="width:340px;">PC / Username</th>
           </tr>
 
           <tr class="filters">
-            <th>*</th>
-            <th><input class="filter-input" id="f-timestamp" placeholder="Timestamp"></th>
-            <th><input class="filter-input" id="f-country" placeholder="Country"></th>
-            <th><input class="filter-input" id="f-region" placeholder="Region"></th>
-            <th><input class="filter-input" id="f-city" placeholder="City"></th>
-            <th><input class="filter-input" id="f-method" placeholder="Method"></th>
-            <th><input class="filter-input" id="f-source" placeholder="Source"></th>
-            <th><input class="filter-input" id="f-ip" placeholder="IP"></th>
-            <th><input class="filter-input" id="f-url" placeholder="URL"></th>
-            <th><input class="filter-input" id="f-flag" placeholder="Flag"></th>
-            <th><input class="filter-input" id="f-computername" placeholder="PC / User"></th>
+            <th></th>
+            <th><input class="filter-input" id="f-timestamp" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-country" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-region" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-city" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-method" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-source" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-ip" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-url" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-flag" placeholder="Filter…"></th>
+            <th><input class="filter-input" id="f-computername" placeholder="Filter…"></th>
           </tr>
         </thead>
 
@@ -211,13 +465,9 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const loader = document.getElementById("loader");
-      const loaderTiny = document.getElementById("loaderTiny");
-      const loaderQuip = document.getElementById("loaderQuip");
-
       const errorDiv = document.getElementById("errorMessage");
       const tableWrap = document.getElementById("tableWrap");
       const tbody = document.getElementById("tbody");
-
       const newBanner = document.getElementById("newBanner");
 
       const firstBtn = document.getElementById("firstBtn");
@@ -241,39 +491,64 @@
         computername: document.getElementById("f-computername"),
       };
 
-      let funnyTimer = null;
       function showLoader(on) {
-        if (on) {
-          loader.style.display = "flex";
-          funnyTimer = setInterval(850);
-        } else {
-          loader.style.display = "none";
-          if (funnyTimer) clearInterval(funnyTimer);
-          funnyTimer = null;
-        }
+        loader.style.display = on ? "flex" : "none";
       }
 
       function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = "block"; }
       function hideError() { errorDiv.style.display = "none"; }
 
+      function esc(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatMethod(method) {
+        const m = (method || "N/A").toUpperCase();
+        let cls = "badge-other";
+        if (m.startsWith("GET")) cls = "badge-get";
+        else if (m.includes("SECRET")) cls = "badge-secret";
+        else if (m.startsWith("POST")) cls = "badge-post";
+        return `<span class="badge ${cls}">${esc(method || "N/A")}</span>`;
+      }
+
+      function formatSource(source) {
+        const s = (source || "N/A").toLowerCase();
+        const cls = s === "postman" ? "badge-postman" : "badge-web";
+        return `<span class="badge ${cls}">${esc(source || "N/A")}</span>`;
+      }
+
+      function formatFlag(flag) {
+        return `<span class="badge badge-flag">${esc(flag || "—")}</span>`;
+      }
+
+      function formatComputername(raw) {
+        if (!raw || raw === "N/A") return "—";
+        const parts = raw.split("|").map(s => s.trim());
+        if (parts.length >= 2) {
+          return `<span class="user-pc">${esc(parts[0])}</span><span class="user-name">${esc(parts.slice(1).join(" | "))}</span>`;
+        }
+        return esc(raw);
+      }
+
+      function formatCell(value, fallback = "—") {
+        const v = value && value !== "none" ? value : fallback;
+        return esc(v);
+      }
+
       // ======= state =======
       let hideMineList = true;
       let pageNumber = 1;
-
-      // cursors returned by server for paging
       let prevCursor = null;
       let nextCursor = null;
-
-      // keep last successful response so we can avoid blank-table on “no more pages”
       let lastGood = { items: [], prevCursor: null, nextCursor: null, pageNumber: 1 };
-
       let pageItems = [];
-
-      // realtime banner
       let newCount = 0;
 
       function getFilterObj() {
-        // send raw text; backend lowercases
         return {
           timestamp: filters.timestamp.value.trim(),
           country: filters.country.value.trim(),
@@ -299,7 +574,7 @@
 
       function showNewBanner() {
         newBanner.style.display = "block";
-        newBanner.textContent = `🆕 New logs available (${newCount}) — click to refresh`;
+        newBanner.textContent = `${newCount} new log${newCount === 1 ? "" : "s"} available — click to refresh`;
       }
 
       newBanner.addEventListener("click", async () => {
@@ -309,29 +584,39 @@
       });
 
       function renderTable() {
-        let html = "";
-        for (let i = 0; i < pageItems.length; i++) {
-          const r = pageItems[i];
-          html += `
+        if (pageItems.length === 0) {
+          tbody.innerHTML = `
             <tr>
-              <td>${pageItems.length - i}</td>
-              <td title="${r.timestamp || ""}">${r.timestamp || "N/A"}</td>
-              <td title="${r.country || ""}">${r.country || "N/A"}</td>
-              <td title="${r.regionName || ""}">${r.regionName || "N/A"}</td>
-              <td title="${r.city || ""}">${r.city || "N/A"}</td>
-              <td title="${r.method || ""}">${r.method || "N/A"}</td>
-              <td title="${r.source || ""}">${r.source || "N/A"}</td>
-              <td title="${r.ip || ""}">${r.ip || "N/A"}</td>
-              <td title="${r.url || ""}">${r.url || "N/A"}</td>
-              <td title="${r.flag || ""}">${r.flag || "N/A"}</td>
-              <td title="${r.computername || ""}">${r.computername || "N/A"}</td>
-            </tr>
-          `;
+              <td colspan="11" class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                No logs match the current filters
+              </td>
+            </tr>`;
+        } else {
+          let html = "";
+          for (let i = 0; i < pageItems.length; i++) {
+            const r = pageItems[i];
+            const rowNum = pageItems.length - i;
+            html += `
+              <tr>
+                <td class="col-num">${rowNum}</td>
+                <td class="col-ts" title="${esc(r.timestamp || "")}">${formatCell(r.timestamp)}</td>
+                <td title="${esc(r.country || "")}">${formatCell(r.country)}</td>
+                <td title="${esc(r.regionName || "")}">${formatCell(r.regionName)}</td>
+                <td title="${esc(r.city || "")}">${formatCell(r.city)}</td>
+                <td>${formatMethod(r.method)}</td>
+                <td>${formatSource(r.source)}</td>
+                <td class="col-ip" title="${esc(r.ip || "")}">${formatCell(r.ip)}</td>
+                <td class="col-url" title="${esc(r.url || "")}">${formatCell(r.url)}</td>
+                <td>${formatFlag(r.flag)}</td>
+                <td class="col-user" title="${esc(r.computername || "")}">${formatComputername(r.computername)}</td>
+              </tr>`;
+          }
+          tbody.innerHTML = html;
         }
-        tbody.innerHTML = html;
 
         pagePill.textContent = `Page ${pageNumber}`;
-        countPill.textContent = `Rows: ${pageItems.length}`;
+        countPill.textContent = `${pageItems.length} row${pageItems.length === 1 ? "" : "s"}`;
 
         prevBtn.disabled = !prevCursor;
         nextBtn.disabled = !nextCursor;
@@ -366,9 +651,7 @@
           const pCur = data.prevCursor || null;
           const nCur = data.nextCursor || null;
 
-          // If user clicks next/prev but there are no more results, don’t blank the table.
           if ((dir === "next" || dir === "prev") && items.length === 0) {
-            // disable that direction
             if (dir === "next") nextCursor = null;
             if (dir === "prev") prevCursor = null;
             renderTable();
@@ -389,7 +672,6 @@
           console.error(e);
           showError("Failed to load logs: " + (e?.message || e));
 
-          // fallback to last good view
           pageItems = lastGood.items;
           prevCursor = lastGood.prevCursor;
           nextCursor = lastGood.nextCursor;
@@ -400,7 +682,6 @@
         }
       }
 
-      // ======= controls =======
       firstBtn.addEventListener("click", async () => {
         hideNewBanner();
         pageNumber = 1;
@@ -433,7 +714,6 @@
         await fetchPage("first", null, 1);
       });
 
-      // Debounced server-side filters (across ALL pages)
       let debounce = null;
       Object.values(filters).forEach(el => {
         el.addEventListener("input", () => {
@@ -446,34 +726,25 @@
         });
       });
 
-      // ======= realtime via SSE =======
       try {
         const es = new EventSource("/api/stream");
 
-        es.addEventListener("new_log", async (ev) => {
-          const msg = JSON.parse(ev.data || "{}");
-
-          // If on first page and no filters, auto-refresh silently (fast)
+        es.addEventListener("new_log", async () => {
           const onFirst = (pageNumber === 1 || pageNumber === "1");
           if (onFirst && filtersAreEmpty() && hideMineList === true) {
             await fetchPage("first", null, 1);
             return;
           }
 
-          // Otherwise show banner
           newCount++;
           showNewBanner();
         });
 
-        // optional: handle disconnect
-        es.addEventListener("error", () => {
-          // If needed you can fallback to polling here.
-        });
+        es.addEventListener("error", () => {});
       } catch (e) {
         console.warn("SSE not available:", e);
       }
 
-      // ======= init =======
       fetchPage("first", null, 1);
     });
   </script>
